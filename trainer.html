@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRAIN — Transfer Learning + CNN Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e7e4dd;--panel:#faf8f4;--panel-2:#f1eee7;--line:#ddd8ce;--line-soft:#e7e3da;
+  --txt:#22252b;--txt-dim:#6c7079;--txt-faint:#9aa0a8;
+  --accent:#ff5630;--accent-dim:#e04a28;--blue:#1f7ae0;--ok:#0a9d6b;--warn:#e07b00;--danger:#e03131;--purple:#7b3ff2;
+  --sans:'Archivo','Segoe UI',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+button{font-family:inherit;cursor:pointer;color:inherit}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);font-size:13px;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cdc8bd;border-radius:6px;border:2px solid var(--panel)}
+.app{display:grid;grid-template-columns:312px 1fr;grid-template-rows:52px 1fr;height:100vh}
+.topbar{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:1.5px;font-size:15px}
+.logo .dot{width:10px;height:10px;background:var(--accent);border-radius:2px;box-shadow:0 0 10px rgba(255,86,48,.5)}
+.logo span{color:var(--txt-faint);font-weight:500;letter-spacing:.5px;font-size:10px;margin-left:2px}
+.topbar .note{font-size:11px;color:var(--txt-faint);font-family:var(--mono)}
+.spacer{flex:1}
+.badge-be{font-family:var(--mono);font-size:10px;color:var(--txt-dim);background:var(--panel-2);border:1px solid var(--line);padding:4px 9px;border-radius:20px}
+.side{grid-row:2;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding-bottom:30px}
+.main{grid-row:2;overflow-y:auto;padding:20px 24px 60px}
+.step{border-bottom:1px solid var(--line-soft);padding:14px 16px}
+.step h3{font-size:10px;letter-spacing:1.3px;font-weight:700;color:var(--txt-faint);text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.step h3 .n{width:18px;height:18px;border-radius:5px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:10px;font-family:var(--mono)}
+.step h3 .n.alt{background:var(--purple)}
+.dropbtn{width:100%;padding:12px;border:1.5px dashed #c7c2b6;border-radius:8px;background:var(--panel-2);color:var(--txt-dim);font-weight:600;font-size:12px;text-align:center;transition:.15s;line-height:1.5}
+.dropbtn:hover{border-color:var(--accent);color:var(--txt)}
+.dropbtn small{display:block;color:var(--txt-faint);font-weight:400;font-size:10px;margin-top:3px;font-family:var(--mono)}
+.dropbtn.done{border-style:solid;border-color:var(--ok);color:var(--txt);background:#eafaf2}
+.summary{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--txt-dim);line-height:1.7}
+.summary b{color:var(--txt)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;background:var(--panel-2);border:1px solid var(--line);padding:3px 9px;border-radius:20px;font-family:var(--mono)}
+.chip .sw{width:9px;height:9px;border-radius:3px}
+.opt{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:.1s}
+.opt:hover{background:var(--panel-2)}
+.opt input{accent-color:var(--accent);width:15px;height:15px}
+.opt .lbl{flex:1;font-size:12px;font-weight:600}
+.opt .sub{font-size:10px;color:var(--txt-faint);font-family:var(--mono)}
+.field{display:flex;align-items:center;justify-content:space-between;margin:9px 2px;font-size:12px;gap:8px}
+.field input[type=range]{accent-color:var(--accent);width:130px}
+.field .val{font-family:var(--mono);color:var(--accent);font-weight:700;min-width:42px;text-align:right}
+.field input[type=number],.field select{background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 7px;font-family:var(--mono);font-size:12px;color:var(--txt)}
+.field input[type=number]{width:72px}
+.btn{width:100%;height:42px;border-radius:9px;background:var(--accent);color:#fff;border:none;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.12s;margin-top:6px}
+.btn:hover{filter:brightness(1.05)}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:none}
+.btn.ghost{background:var(--panel-2);color:var(--txt);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--accent);filter:none}
+input[type=file]{display:none}
+
+/* CNN builder */
+.cnn-on{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.cnn-body{opacity:.4;pointer-events:none;transition:.15s}
+.cnn-body.active{opacity:1;pointer-events:auto}
+.sizebtns{display:flex;gap:5px;margin:6px 0 10px}
+.sizebtns button{flex:1;padding:6px 0;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);font-family:var(--mono);font-size:11px;color:var(--txt-dim)}
+.sizebtns button.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.sublbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--txt-faint);font-weight:700;margin:12px 0 6px}
+.lcard{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lcard .mini{display:flex;flex-direction:column;gap:1px}
+.lcard label{font-size:8px;color:var(--txt-faint);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.lcard input,.lcard select{background:#fff;border:1px solid var(--line);border-radius:5px;padding:4px 5px;font-family:var(--mono);font-size:11px;color:var(--txt);width:100%}
+.lcard input[type=number]{width:52px}
+.lcard .rm{margin-left:auto;color:var(--txt-faint);background:none;border:none;font-size:16px;padding:2px 4px;align-self:center}
+.lcard .rm:hover{color:var(--danger)}
+.addrow{width:100%;padding:7px;border:1px dashed #c7c2b6;border-radius:7px;background:transparent;color:var(--txt-dim);font-size:11px;font-weight:600}
+.addrow:hover{border-color:var(--purple);color:var(--purple)}
+.toggle-row{display:flex;gap:8px;margin:10px 0}
+.toggle-row .opt{flex:1;background:var(--panel-2);border:1px solid var(--line);justify-content:center}
+.stat{font-family:var(--mono);font-size:11px;color:var(--txt-dim);background:#f3eefb;border:1px solid #e0d3f7;border-radius:8px;padding:9px 11px;margin-top:8px;line-height:1.6}
+.stat b{color:var(--purple)}
+.stat.bad{background:#fdeaea;border-color:#f3c0c0;color:#a23}
+.seg{display:flex;gap:4px}
+.seg button{flex:1;padding:5px 0;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);font-size:11px;color:var(--txt-dim)}
+.seg button.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:20px}
+.card h2{font-size:14px;font-weight:700;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.card h2 .ico{width:22px;height:22px;color:var(--accent)}
+.card .desc{font-size:12px;color:var(--txt-dim);margin-bottom:16px;line-height:1.5}
+.card h2 .right{margin-left:auto}
+.linkbtn{font-size:11px;font-weight:600;color:var(--txt-dim);background:var(--panel-2);border:1px solid var(--line);padding:5px 10px;border-radius:6px}
+.linkbtn:hover{border-color:var(--accent);color:var(--txt)}
+.placeholder{padding:50px 20px;text-align:center;color:var(--txt-faint);font-size:13px;line-height:1.6}
+.placeholder svg{width:46px;height:46px;opacity:.35;margin-bottom:12px}
+.crops{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;max-height:230px;overflow-y:auto}
+.crop{position:relative;border-radius:7px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1}
+.crop img{width:100%;height:100%;object-fit:cover;display:block}
+.crop .tag{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);color:#fff;font-size:9px;font-family:var(--mono);padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crop.ok .tag{background:rgba(10,157,107,.85)}
+.crop.bad .tag{background:rgba(224,49,49,.85)}
+.progress{height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden;margin:12px 0 4px}
+.progress .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-dim));width:0;transition:width .2s}
+.proglabel{font-family:var(--mono);font-size:11px;color:var(--txt-dim)}
+table.lead{width:100%;border-collapse:collapse;font-size:12px}
+table.lead th{text-align:left;padding:8px 10px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--txt-faint);border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
+table.lead th:hover{color:var(--txt)}
+table.lead td{padding:9px 10px;border-bottom:1px solid var(--line-soft);font-family:var(--mono)}
+table.lead tr.best td{background:#fff6ee}
+table.lead tr.sel td{background:#ffe9e2}
+.bn{font-family:var(--sans);font-weight:600}
+.tagk{font-size:9px;font-family:var(--mono);padding:1px 6px;border-radius:4px;font-weight:700}
+.tagk.tr{background:#e3eefb;color:#1f5fb0}
+.tagk.cn{background:#f0e8fc;color:#6a2fd0}
+.metric-pill{display:inline-block;padding:2px 7px;border-radius:5px;font-weight:700}
+.pick{padding:5px 11px;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);font-size:11px;font-weight:700}
+.pick:hover{border-color:var(--accent)}
+.pick.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cm{border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.cm td,.cm th{border:1px solid var(--line);padding:6px 9px;text-align:center;min-width:38px}
+.cm th{background:var(--panel-2);font-weight:700;color:var(--txt-dim)}
+.cm .diag{font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:1100px){.two{grid-template-columns:1fr}}
+.chartwrap{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.legend{display:flex;gap:14px;font-size:11px;font-family:var(--mono);margin-top:8px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.pcls{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono)}
+.pcls th{text-align:left;padding:6px 10px;font-size:10px;text-transform:uppercase;color:var(--txt-faint);border-bottom:1px solid var(--line)}
+.pcls td{padding:6px 10px;border-bottom:1px solid var(--line-soft)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:#22252b;color:#f4f2ee;padding:11px 18px;border-radius:8px;font-size:12px;opacity:0;transition:.25s;pointer-events:none;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.3);font-weight:500;display:flex;align-items:center;gap:9px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast .tdot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.toast.err .tdot{background:#ff7a7a}
+.muted{color:var(--txt-faint);font-size:11px;font-family:var(--mono)}
+.warnbox{background:#fff6ee;border:1px solid #f3d3b8;color:#8a5a1f;border-radius:9px;padding:11px 13px;font-size:12px;line-height:1.5;margin-bottom:16px;display:flex;gap:9px}
+.warnbox svg{width:17px;height:17px;flex-shrink:0;margin-top:1px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo"><span class="dot"></span>TRAIN<span>transfer learning + cnn studio</span></div>
+    <div class="note">in-browser · your GPU</div>
+    <div class="spacer"></div>
+    <div class="badge-be" id="beBadge">backend: —</div>
+  </div>
+
+  <div class="side">
+    <div class="step">
+      <h3><span class="n">1</span> Training images</h3>
+      <button class="dropbtn" id="dropImg">+ Load image folder<small>the images you annotated</small></button>
+      <input type="file" id="fileImg" webkitdirectory directory multiple>
+    </div>
+    <div class="step">
+      <h3><span class="n">2</span> Annotation file</h3>
+      <button class="dropbtn" id="dropJson">+ Load annotations<small>native / COCO / project JSON</small></button>
+      <input type="file" id="fileJson" accept=".json">
+      <div class="summary" id="dataSummary"></div>
+      <div class="chips" id="classChips"></div>
+    </div>
+    <div class="step">
+      <h3><span class="n">3</span> Validation split</h3>
+      <div class="field"><span>Hold out for validation</span><span class="val" id="splitVal">20%</span></div>
+      <input type="range" id="split" min="10" max="50" value="20" step="5" style="width:100%;accent-color:var(--accent)">
+      <div class="muted" style="margin-top:6px">Stratified per class. Scores & ranks every model.</div>
+    </div>
+    <div class="step">
+      <h3><span class="n">4</span> Transfer backbones <span class="muted" style="text-transform:none;letter-spacing:0">(MobileNet)</span></h3>
+      <div id="backbones"></div>
+      <div class="sublbl">Classifier head</div>
+      <div id="heads"></div>
+    </div>
+
+    <div class="step">
+      <h3><span class="n alt">5</span> Custom CNN <span class="muted" style="text-transform:none;letter-spacing:0">(from scratch)</span></h3>
+      <label class="cnn-on"><input type="checkbox" id="cnnOn" style="accent-color:var(--purple);width:15px;height:15px"> <b>Include a custom CNN</b></label>
+      <div class="cnn-body" id="cnnBody">
+        <div class="field" style="margin-top:8px"><span>Preset</span>
+          <select id="cnnPreset"><option value="minivgg">Mini-VGG</option><option value="lenet">LeNet-style</option><option value="wide">Wide / shallow</option><option value="custom">Custom (edited)</option></select></div>
+        <div class="sublbl">Input image size</div>
+        <div class="sizebtns" id="cnnSize"></div>
+        <div class="sublbl">Convolutional blocks</div>
+        <div id="convList"></div>
+        <button class="addrow" id="addConv">+ add conv block</button>
+        <div class="toggle-row">
+          <label class="opt"><input type="checkbox" id="cnnBN" style="accent-color:var(--purple)"><span class="lbl" style="font-size:11px">Batch norm</span></label>
+        </div>
+        <div class="sublbl">Flatten strategy</div>
+        <div class="seg" id="cnnFlat"><button data-f="flat">Flatten</button><button data-f="gap">Global avg pool</button></div>
+        <div class="sublbl">Dense layers</div>
+        <div id="denseList"></div>
+        <button class="addrow" id="addDense">+ add dense layer</button>
+        <div class="sublbl">Optimiser & schedule</div>
+        <div class="field"><span>Optimiser</span><select id="cnnOpt"><option value="adam">Adam</option><option value="rmsprop">RMSprop</option><option value="sgd">SGD</option></select></div>
+        <div class="field"><span>Learning rate</span><input type="number" id="cnnLR" value="0.001" step="0.0005" min="0.0001"></div>
+        <div class="field"><span>Epochs</span><input type="number" id="cnnEpochs" value="35" min="5" max="400"></div>
+        <div class="stat" id="cnnStat"></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3><span class="n">6</span> Head training settings</h3>
+      <div class="field"><span>Epochs <span class="muted">(softmax/mlp)</span></span><input type="number" id="epochs" value="40" min="5" max="300"></div>
+      <div class="field"><span>Batch size</span><input type="number" id="batch" value="16" min="2" max="128"></div>
+      <div class="field"><span>Head learning rate</span><input type="number" id="lr" value="0.001" step="0.0005" min="0.0001"></div>
+      <div class="field"><span>KNN neighbours (k)</span><input type="number" id="kval" value="3" min="1" max="15"></div>
+    </div>
+    <div class="step">
+      <button class="btn" id="btnTrain" disabled>▶ Train selected models</button>
+      <button class="btn ghost" id="btnReset" style="margin-top:8px">Reset everything</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="warnbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+      <div>Each annotated box becomes a labelled crop → the models learn <b>image classification</b>. Transfer backbones reuse pretrained features; the custom CNN trains from raw pixels. At test time they classify crops/whole images (they don't re-localise boxes). First run downloads models from a CDN, so it needs internet.</div>
+    </div>
+
+    <div class="card" id="cardData">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Dataset</h2>
+      <div class="desc">Crops extracted from your annotations, grouped by class — what every model trains on.</div>
+      <div id="dataBody"><div class="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15l-5-5L5 21"/><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><div>Load images + an annotation file to build the dataset.</div></div></div>
+    </div>
+
+    <div class="card" id="cardTrain">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Training & leaderboard<button class="linkbtn right" id="btnClear" style="display:none">Clear leaderboard</button></h2>
+      <div class="desc">Selected backbones × heads and your custom CNN are trained on the same split and ranked. Results accumulate across runs so you can compare CNN tweaks. Click a row to inspect; pick one for inference.</div>
+      <div id="trainBody"><div class="placeholder muted">Configure models on the left, then press <b>Train selected models</b>.</div></div>
+    </div>
+
+    <div class="card" id="cardInspect" style="display:none">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Model inspector</h2>
+      <div class="desc" id="inspectName">—</div>
+      <div class="two">
+        <div class="chartwrap"><div class="muted" style="margin-bottom:6px">Learning curves</div><canvas id="curve" width="520" height="260" style="width:100%;height:auto"></canvas>
+          <div class="legend"><span><i style="background:#1f7ae0"></i>train acc</span><span><i style="background:#ff5630"></i>val acc</span><span><i style="background:#9aa0a8"></i>val loss</span></div></div>
+        <div><div class="muted" style="margin-bottom:6px">Confusion matrix (validation)</div><div id="cmWrap" style="overflow:auto"></div>
+          <div class="muted" style="margin:14px 0 6px">Per-class metrics</div><div id="pclsWrap"></div></div>
+      </div>
+    </div>
+
+    <div class="card" id="cardTest">
+      <h2><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Test the selected model</h2>
+      <div class="desc">Load new images to classify. Optionally also load an annotation file for them to get full test-set metrics; otherwise whole images are classified.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="dropbtn" id="dropTest" style="flex:1;min-width:200px">+ Load test images<small>a new batch or single image</small></button>
+        <button class="dropbtn" id="dropTestJson" style="flex:1;min-width:200px">+ Test annotations <small>optional · for metrics</small></button>
+        <input type="file" id="fileTest" accept="image/*" multiple>
+        <input type="file" id="fileTestJson" accept=".json">
+      </div>
+      <button class="btn" id="btnTest" disabled style="max-width:260px">▶ Run inference</button>
+      <div id="testBody" style="margin-top:18px"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
+
+<script>
+'use strict';
+const PALETTE=['#1f7ae0','#e8412b','#0a9d6b','#d6248d','#e07b00','#7b3ff2','#0891b2','#c026d3','#b45309','#475569','#0d9488','#9333ea'];
+const INPUT=224;
+const $=s=>document.querySelector(s);
+const ACTS=['relu','leakyrelu','elu','tanh','sigmoid'];
+
+const BACKBONES=[
+  {id:'mv1_025',name:'MobileNet v1 · 0.25',sub:'fastest · 256-d',version:1,alpha:0.25,def:true},
+  {id:'mv1_050',name:'MobileNet v1 · 0.50',sub:'fast · 512-d',version:1,alpha:0.50},
+  {id:'mv1_075',name:'MobileNet v1 · 0.75',sub:'768-d',version:1,alpha:0.75},
+  {id:'mv1_100',name:'MobileNet v1 · 1.00',sub:'1024-d',version:1,alpha:1.0,def:true},
+  {id:'mv2_100',name:'MobileNet v2 · 1.00',sub:'strongest · 1280-d',version:2,alpha:1.0},
+];
+const HEADS=[
+  {id:'knn',name:'KNN',sub:'no training · instant',def:true},
+  {id:'softmax',name:'Softmax (linear)',sub:'1 dense layer',def:true},
+  {id:'mlp',name:'MLP',sub:'128-relu + dropout'},
+];
+const PRESETS={
+  minivgg:{input:96,batchnorm:true,gap:false,conv:[{filters:16,kernel:3,act:'relu',pool:'max'},{filters:32,kernel:3,act:'relu',pool:'max'},{filters:64,kernel:3,act:'relu',pool:'max'}],dense:[{units:64,act:'relu',dropout:0.3}],opt:'adam',lr:0.001,epochs:35},
+  lenet:{input:48,batchnorm:false,gap:false,conv:[{filters:6,kernel:5,act:'tanh',pool:'avg'},{filters:16,kernel:5,act:'tanh',pool:'avg'}],dense:[{units:120,act:'tanh',dropout:0},{units:84,act:'tanh',dropout:0}],opt:'adam',lr:0.001,epochs:35},
+  wide:{input:64,batchnorm:true,gap:true,conv:[{filters:32,kernel:3,act:'relu',pool:'max'},{filters:64,kernel:3,act:'relu',pool:'max'}],dense:[{units:128,act:'relu',dropout:0.4}],opt:'adam',lr:0.001,epochs:35},
+};
+
+const S={trainImgs:{},json:null,dataset:[],classes:[],backboneCache:{},models:[],selected:null,testImgs:[],testJson:null,busy:false,runCount:0,
+  cnn:JSON.parse(JSON.stringify(PRESETS.minivgg))};
+
+/* ---------- build sidebar option lists ---------- */
+$('#backbones').innerHTML=BACKBONES.map(b=>`<label class="opt"><input type="checkbox" data-bb="${b.id}" ${b.def?'checked':''}><span class="lbl">${b.name}<div class="sub">${b.sub}</div></span></label>`).join('');
+$('#heads').innerHTML=HEADS.map(h=>`<label class="opt"><input type="checkbox" data-hd="${h.id}" ${h.def?'checked':''}><span class="lbl">${h.name}<div class="sub">${h.sub}</div></span></label>`).join('');
+$('#split').oninput=e=>$('#splitVal').textContent=e.target.value+'%';
+
+/* ---------- CNN builder ---------- */
+$('#cnnOn').onchange=e=>{$('#cnnBody').classList.toggle('active',e.target.checked);};
+$('#cnnPreset').onchange=e=>{if(e.target.value!=='custom'){S.cnn=JSON.parse(JSON.stringify(PRESETS[e.target.value]));renderCNN();}};
+$('#addConv').onclick=()=>{S.cnn.conv.push({filters:32,kernel:3,act:'relu',pool:'max'});markCustom();renderCNN();};
+$('#addDense').onclick=()=>{S.cnn.dense.push({units:64,act:'relu',dropout:0.3});markCustom();renderCNN();};
+$('#cnnBN').onchange=e=>{S.cnn.batchnorm=e.target.checked;markCustom();updateCNNStat();};
+$('#cnnFlat').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;S.cnn.gap=b.dataset.f==='gap';markCustom();renderCNN();};
+$('#cnnSize').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;S.cnn.input=+b.dataset.s;markCustom();renderCNN();};
+$('#cnnOpt').onchange=e=>{S.cnn.opt=e.target.value;markCustom();};
+$('#cnnLR').onchange=e=>{S.cnn.lr=+e.target.value;markCustom();};
+$('#cnnEpochs').onchange=e=>{S.cnn.epochs=+e.target.value;markCustom();};
+function markCustom(){$('#cnnPreset').value='custom';}
+function renderCNN(){
+  // size buttons
+  $('#cnnSize').innerHTML=[48,64,96,128].map(s=>`<button data-s="${s}" class="${S.cnn.input===s?'on':''}">${s}px</button>`).join('');
+  // conv list
+  $('#convList').innerHTML=S.cnn.conv.map((c,i)=>`<div class="lcard" data-ci="${i}">
+    <div class="mini"><label>filters</label><input type="number" data-k="filters" value="${c.filters}" min="1" max="512"></div>
+    <div class="mini"><label>kernel</label><select data-k="kernel">${[3,5,7].map(k=>`<option ${c.kernel===k?'selected':''}>${k}</option>`).join('')}</select></div>
+    <div class="mini"><label>activation</label><select data-k="act">${ACTS.map(a=>`<option ${c.act===a?'selected':''}>${a}</option>`).join('')}</select></div>
+    <div class="mini"><label>pool</label><select data-k="pool">${['max','avg','none'].map(p=>`<option ${c.pool===p?'selected':''}>${p}</option>`).join('')}</select></div>
+    <button class="rm" data-rmc="${i}">×</button></div>`).join('');
+  // dense list
+  $('#denseList').innerHTML=S.cnn.dense.map((d,i)=>`<div class="lcard" data-di="${i}">
+    <div class="mini"><label>units</label><input type="number" data-k="units" value="${d.units}" min="2" max="1024"></div>
+    <div class="mini"><label>activation</label><select data-k="act">${ACTS.map(a=>`<option ${d.act===a?'selected':''}>${a}</option>`).join('')}</select></div>
+    <div class="mini"><label>dropout</label><input type="number" data-k="dropout" value="${d.dropout}" min="0" max="0.9" step="0.1"></div>
+    <button class="rm" data-rmd="${i}">×</button></div>`).join('');
+  $('#cnnBN').checked=S.cnn.batchnorm;
+  $('#cnnFlat').querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.f==='gap')===S.cnn.gap));
+  $('#cnnOpt').value=S.cnn.opt;$('#cnnLR').value=S.cnn.lr;$('#cnnEpochs').value=S.cnn.epochs;
+  // wire inputs
+  $('#convList').querySelectorAll('[data-ci]').forEach(card=>{const i=+card.dataset.ci;card.querySelectorAll('[data-k]').forEach(inp=>inp.onchange=()=>{const k=inp.dataset.k;S.cnn.conv[i][k]=(k==='act'||k==='pool')?inp.value:+inp.value;markCustom();updateCNNStat();});});
+  $('#denseList').querySelectorAll('[data-di]').forEach(card=>{const i=+card.dataset.di;card.querySelectorAll('[data-k]').forEach(inp=>inp.onchange=()=>{const k=inp.dataset.k;S.cnn.dense[i][k]=(k==='act')?inp.value:+inp.value;markCustom();updateCNNStat();});});
+  $('#convList').querySelectorAll('[data-rmc]').forEach(b=>b.onclick=()=>{S.cnn.conv.splice(+b.dataset.rmc,1);markCustom();renderCNN();});
+  $('#denseList').querySelectorAll('[data-rmd]').forEach(b=>b.onclick=()=>{S.cnn.dense.splice(+b.dataset.rmd,1);markCustom();renderCNN();});
+  updateCNNStat();
+}
+function cnnStats(spec,C){
+  let s=spec.input,ch=3,params=0,ok=true;
+  for(const b of spec.conv){params+=(b.kernel*b.kernel*ch+1)*b.filters;if(spec.batchnorm)params+=2*b.filters;ch=b.filters;if(b.pool!=='none')s=Math.floor(s/2);if(s<1)ok=false;}
+  const flat=spec.gap?ch:s*s*ch;let inU=flat;
+  for(const d of spec.dense){params+=(inU+1)*d.units;inU=d.units;}
+  params+=(inU+1)*C;
+  return{params,spatial:s,flat,ok};
+}
+function updateCNNStat(){
+  const C=Math.max(2,S.classes.length),st=cnnStats(S.cnn,C),el=$('#cnnStat');
+  if(!st.ok){el.className='stat bad';el.innerHTML='⚠ Too many pooling layers for this input size — the feature map collapses. Remove a pool or increase input size.';$('#btnTrain').dataset.cnnbad='1';}
+  else{el.className='stat';el.innerHTML=`≈ <b>${st.params.toLocaleString()}</b> parameters · final map <b>${st.spatial}×${st.spatial}×${S.cnn.conv.length?S.cnn.conv[S.cnn.conv.length-1].filters:3}</b>${S.cnn.gap?' → GAP':' → flatten '+st.flat}`;$('#btnTrain').dataset.cnnbad='';}
+}
+renderCNN();
+
+/* ---------- file loading ---------- */
+$('#dropImg').onclick=()=>$('#fileImg').click();
+$('#fileImg').onchange=e=>loadTrainImages(e.target.files);
+$('#dropJson').onclick=()=>$('#fileJson').click();
+$('#fileJson').onchange=e=>loadJson(e.target.files[0]);
+$('#dropTest').onclick=()=>$('#fileTest').click();
+$('#fileTest').onchange=e=>loadTestImages(e.target.files);
+$('#dropTestJson').onclick=()=>$('#fileTestJson').click();
+$('#fileTestJson').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{S.testJson=JSON.parse(await f.text());$('#dropTestJson').classList.add('done');$('#dropTestJson').firstChild.textContent='✓ Test annotations';toast('Test annotations loaded — metrics enabled');}catch(_){toast('Invalid JSON',true);}};
+function loadTrainImages(list){
+  const files=Array.from(list).filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|bmp|webp|gif)$/i.test(f.name));
+  if(!files.length){toast('No images found',true);return;}
+  files.forEach(f=>{if(!S.trainImgs[f.name])S.trainImgs[f.name]={file:f,url:URL.createObjectURL(f),imgEl:null,w:0,h:0};});
+  $('#dropImg').classList.add('done');$('#dropImg').firstChild.textContent=`✓ ${Object.keys(S.trainImgs).length} images`;
+  toast(`Loaded ${files.length} images`);maybeBuild();
+}
+async function loadJson(f){if(!f)return;try{S.json=JSON.parse(await f.text());}catch(_){return toast('Invalid JSON',true);}$('#dropJson').classList.add('done');$('#dropJson').firstChild.textContent='✓ Annotations loaded';toast('Annotations loaded');maybeBuild();}
+function loadTestImages(list){
+  const files=Array.from(list).filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|bmp|webp|gif)$/i.test(f.name));
+  if(!files.length){toast('No images found',true);return;}
+  S.testImgs=files.map(f=>({name:f.name,file:f,url:URL.createObjectURL(f),imgEl:null,w:0,h:0}));
+  $('#dropTest').classList.add('done');$('#dropTest').firstChild.textContent=`✓ ${files.length} test images`;
+  $('#btnTest').disabled=!S.selected;
+}
+
+/* ---------- annotation parsing ---------- */
+function extractBoxes(json){
+  const boxes=[];
+  if(json.images&&Array.isArray(json.annotations)&&json.categories){
+    const idName={};json.categories.forEach(c=>idName[c.id]=c.name);
+    const idFile={};json.images.forEach(im=>idFile[im.id]=im.file_name);
+    json.annotations.forEach(a=>{const b=a.bbox||[];boxes.push({file_name:idFile[a.image_id],label:idName[a.category_id]||'class_'+a.category_id,x:b[0],y:b[1],w:b[2],h:b[3]});});
+  } else if(json.images&&Array.isArray(json.images)){
+    json.images.forEach(im=>{(im.annotations||[]).forEach(a=>{const box=boxFromAnn(a);if(box)boxes.push({file_name:im.file_name,label:a.label||'unlabeled',...box});});});
+  }
+  return boxes.filter(b=>b.file_name&&b.w>0&&b.h>0);
+}
+function boxFromAnn(a){
+  if(Array.isArray(a.bbox)&&a.bbox.length===4)return{x:a.bbox[0],y:a.bbox[1],w:a.bbox[2],h:a.bbox[3]};
+  if(a.corners){const xs=a.corners.map(p=>p[0]),ys=a.corners.map(p=>p[1]);return{x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}
+  if(a.center&&a.radii)return{x:a.center[0]-a.radii[0],y:a.center[1]-a.radii[1],w:a.radii[0]*2,h:a.radii[1]*2};
+  if(a.points){const xs=a.points.map(p=>p[0]),ys=a.points.map(p=>p[1]);return{x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}
+  if(typeof a.x==='number'&&typeof a.w==='number')return{x:a.x,y:a.y,w:a.w,h:a.h};
+  return null;
+}
+function loadImg(entry){return new Promise((res,rej)=>{if(entry.imgEl)return res(entry.imgEl);const im=new Image();im.onload=()=>{entry.imgEl=im;entry.w=im.naturalWidth;entry.h=im.naturalHeight;res(im);};im.onerror=rej;im.src=entry.url;});}
+async function maybeBuild(){
+  if(!S.json||!Object.keys(S.trainImgs).length)return;
+  const boxes=extractBoxes(S.json);if(!boxes.length){toast('No usable boxes in that file',true);return;}
+  S.dataset=[];const missing=new Set(),classSet={};
+  for(const b of boxes){const entry=S.trainImgs[b.file_name];if(!entry){missing.add(b.file_name);continue;}await loadImg(entry);S.dataset.push({label:b.label,canvas:cropTo(entry.imgEl,b.x,b.y,b.w,b.h),imgName:b.file_name});classSet[b.label]=(classSet[b.label]||0)+1;}
+  S.classes=Object.keys(classSet).sort();
+  renderSummary(classSet,missing);renderDataset();updateCNNStat();validateReady();
+}
+function cropTo(img,x,y,w,h){x=Math.max(0,x);y=Math.max(0,y);w=Math.min(img.naturalWidth-x,w);h=Math.min(img.naturalHeight-y,h);const c=document.createElement('canvas');c.width=INPUT;c.height=INPUT;c.getContext('2d').drawImage(img,x,y,w,h,0,0,INPUT,INPUT);return c;}
+function wholeTo(img){const c=document.createElement('canvas');c.width=INPUT;c.height=INPUT;c.getContext('2d').drawImage(img,0,0,INPUT,INPUT);return c;}
+function renderSummary(classSet,missing){$('#dataSummary').innerHTML=`<b>${S.dataset.length}</b> crops · <b>${S.classes.length}</b> classes`+(missing.size?`<br><span style="color:var(--warn)">${missing.size} image(s) referenced but not loaded</span>`:'');$('#classChips').innerHTML=S.classes.map((c,i)=>`<span class="chip"><span class="sw" style="background:${PALETTE[i%PALETTE.length]}"></span>${c} · ${classSet[c]}</span>`).join('');}
+function renderDataset(){if(!S.dataset.length)return;const body=$('#dataBody');body.innerHTML='<div class="crops" id="cropGrid"></div>';const grid=$('#cropGrid');S.dataset.slice(0,120).forEach(d=>{const div=document.createElement('div');div.className='crop';const img=document.createElement('img');img.src=d.canvas.toDataURL();const tag=document.createElement('div');tag.className='tag';tag.textContent=d.label;div.appendChild(img);div.appendChild(tag);grid.appendChild(div);});if(S.dataset.length>120)body.insertAdjacentHTML('beforeend',`<div class="muted" style="margin-top:8px">showing first 120 of ${S.dataset.length}</div>`);}
+function validateReady(){$('#btnTrain').disabled=!(S.dataset.length>=4&&S.classes.length>=2)||S.busy;if(S.dataset.length&&S.classes.length<2)toast('Need at least 2 classes to train',true);}
+
+/* ---------- TF ---------- */
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+let tfReady=false;
+async function ensureTF(){if(tfReady)return;await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js');await tf.ready();$('#beBadge').textContent='backend: '+tf.getBackend();tfReady=true;}
+async function getBackbone(bb){if(S.backboneCache[bb.id])return S.backboneCache[bb.id];const m=await mobilenet.load({version:bb.version,alpha:bb.alpha});S.backboneCache[bb.id]=m;return m;}
+async function embedAll(model,items){const out=[];for(let i=0;i<items.length;i++){const e=tf.tidy(()=>model.infer(tf.browser.fromPixels(items[i].canvas),true));out.push(Float32Array.from(await e.data()));e.dispose();if(i%4===0){setProgress(i/items.length);await tf.nextFrame();}}return out;}
+function imageTensor(items,size){return tf.tidy(()=>tf.stack(items.map(it=>tf.image.resizeBilinear(tf.browser.fromPixels(it.canvas),[size,size]).toFloat().div(255))));}
+
+/* ---------- split & metrics ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function stratSplit(labels,frac){const rnd=mulberry32(12345),byCls={};labels.forEach((l,i)=>{(byCls[l]=byCls[l]||[]).push(i);});const train=[],val=[];for(const l in byCls){const idx=byCls[l].slice();for(let i=idx.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}const nv=Math.max(idx.length>=2?1:0,Math.round(idx.length*frac));val.push(...idx.slice(0,nv));train.push(...idx.slice(nv));}return{train,val};}
+function metrics(yTrue,yPred,C){const cm=Array.from({length:C},()=>new Array(C).fill(0));for(let i=0;i<yTrue.length;i++)cm[yTrue[i]][yPred[i]]++;let correct=0;for(let i=0;i<C;i++)correct+=cm[i][i];const acc=yTrue.length?correct/yTrue.length:0;const per=[];let mf=0,mc=0;for(let c=0;c<C;c++){let tp=cm[c][c],fp=0,fn=0;for(let k=0;k<C;k++){if(k!==c){fp+=cm[k][c];fn+=cm[c][k];}}const p=tp+fp?tp/(tp+fp):0,r=tp+fn?tp/(tp+fn):0,f=p+r?2*p*r/(p+r):0,support=tp+fn;per.push({p,r,f,support});if(support){mf+=f;mc++;}}return{cm,acc,per,macroF1:mc?mf/mc:0};}
+function l2norm(v){let s=0;for(let i=0;i<v.length;i++)s+=v[i]*v[i];s=Math.sqrt(s)||1;const o=new Float32Array(v.length);for(let i=0;i<v.length;i++)o[i]=v[i]/s;return o;}
+function knnPredict(trainE,trainY,q,k){const sims=trainE.map((e,i)=>{let d=0;for(let j=0;j<e.length;j++)d+=e[j]*q[j];return{d,y:trainY[i]};});sims.sort((a,b)=>b.d-a.d);const top=sims.slice(0,k),votes={};top.forEach(t=>votes[t.y]=(votes[t.y]||0)+1);let best=top[0].y,bc=0;for(const y in votes)if(votes[y]>bc){bc=votes[y];best=+y;}return{label:+best,conf:bc/top.length};}
+
+/* ---------- build CNN model ---------- */
+function buildCNN(spec,C){
+  const m=tf.sequential();let first=true;
+  for(const b of spec.conv){
+    const cfg={filters:b.filters,kernelSize:b.kernel,padding:'same'};
+    if(b.act!=='leakyrelu')cfg.activation=b.act;
+    if(first){cfg.inputShape=[spec.input,spec.input,3];first=false;}
+    m.add(tf.layers.conv2d(cfg));
+    if(b.act==='leakyrelu')m.add(tf.layers.leakyReLU());
+    if(spec.batchnorm)m.add(tf.layers.batchNormalization());
+    if(b.pool==='max')m.add(tf.layers.maxPooling2d({poolSize:2}));
+    else if(b.pool==='avg')m.add(tf.layers.averagePooling2d({poolSize:2}));
+  }
+  m.add(spec.gap?tf.layers.globalAveragePooling2d({}):tf.layers.flatten());
+  for(const d of spec.dense){
+    const cfg={units:d.units};if(d.act!=='leakyrelu')cfg.activation=d.act;
+    m.add(tf.layers.dense(cfg));
+    if(d.act==='leakyrelu')m.add(tf.layers.leakyReLU());
+    if(d.dropout>0)m.add(tf.layers.dropout({rate:d.dropout}));
+  }
+  m.add(tf.layers.dense({units:C,activation:'softmax'}));
+  return m;
+}
+
+/* ---------- TRAIN ---------- */
+$('#btnReset').onclick=()=>location.reload();
+$('#btnClear').onclick=()=>{S.models.forEach(disposeModel);S.models=[];S.selected=null;$('#cardInspect').style.display='none';renderLeaderboard();$('#btnClear').style.display='none';};
+function disposeModel(r){try{if(r.net)r.net.dispose();if(r.cnnModel)r.cnnModel.dispose();}catch(_){}}
+$('#btnTrain').onclick=train;
+async function train(){
+  if(S.busy)return;
+  const bbSel=[...document.querySelectorAll('[data-bb]:checked')].map(c=>BACKBONES.find(b=>b.id===c.dataset.bb));
+  const hdSel=[...document.querySelectorAll('[data-hd]:checked')].map(c=>c.dataset.hd);
+  const cnnOn=$('#cnnOn').checked;
+  if(!bbSel.length&&!cnnOn){toast('Select transfer models and/or enable the custom CNN',true);return;}
+  if(bbSel.length&&!hdSel.length){toast('Pick at least one classifier head',true);return;}
+  if(cnnOn&&$('#btnTrain').dataset.cnnbad){toast('Fix the CNN architecture warning first',true);return;}
+  S.busy=true;$('#btnTrain').disabled=true;
+  const C=S.classes.length,clsIdx=Object.fromEntries(S.classes.map((c,i)=>[c,i]));
+  const labels=S.dataset.map(d=>clsIdx[d.label]);
+  const frac=(+$('#split').value)/100,{train,val}=stratSplit(S.dataset.map(d=>d.label),frac);
+  const epochs=+$('#epochs').value,batch=+$('#batch').value,lr=+$('#lr').value,k=+$('#kval').value;
+  const trainY=train.map(i=>labels[i]),valY=val.map(i=>labels[i]);
+  if($('#trainBody').querySelector('.placeholder'))$('#trainBody').innerHTML='';
+  $('#trainBody').insertAdjacentHTML('afterbegin',`<div id="progWrap"><div class="proglabel" id="plabel">Loading TensorFlow.js…</div><div class="progress"><div class="bar" id="pbar"></div></div></div>`);
+  try{
+    await ensureTF();
+    // transfer models
+    for(const bb of bbSel){
+      setLabel(`Loading backbone ${bb.name}…`);setProgress(0);
+      const model=await getBackbone(bb);
+      setLabel(`Embedding ${S.dataset.length} crops with ${bb.name}…`);
+      const emb=await embedAll(model,S.dataset);const D=emb[0].length;
+      const trainE=train.map(i=>emb[i]),valE=val.map(i=>emb[i]);
+      for(const hd of hdSel){
+        setLabel(`Training ${bb.name} + ${hd.toUpperCase()}…`);await tf.nextFrame();
+        const t0=performance.now();
+        const res=hd==='knn'?runKNN(trainE,trainY,valE,valY,C,k):await runNN(hd,trainE,trainY,valE,valY,C,D,epochs,batch,lr);
+        res.kind='transfer';res.backbone=bb;res.head=hd;res.name=bb.name.replace('MobileNet ','MNet ')+' + '+hd.toUpperCase();res.timeMs=performance.now()-t0;
+        addOrReplace(res,'tr:'+bb.id+':'+hd);renderLeaderboard();
+      }
+    }
+    // custom CNN
+    if(cnnOn){
+      setLabel('Training custom CNN (from scratch)…');setProgress(0);await tf.nextFrame();
+      const spec=JSON.parse(JSON.stringify(S.cnn));const t0=performance.now();
+      const res=await runCNN(spec,train.map(i=>S.dataset[i]),val.map(i=>S.dataset[i]),trainY,valY,C,batch);
+      S.runCount++;res.kind='cnn';res.spec=spec;res.inputSize=spec.input;res.name=`Custom CNN #${S.runCount} · ${spec.conv.length}conv/${spec.dense.length}dense @${spec.input}px`;res.timeMs=performance.now()-t0;
+      res.sig='cnn:'+(S.runCount);addOrReplace(res,res.sig);renderLeaderboard();
+    }
+    setProgress(1);
+    const best=[...S.models].sort((a,b)=>b.macroF1-a.macroF1||b.acc-a.acc)[0];
+    if(best&&!S.selected)selectModel(best.id);else renderLeaderboard();
+    $('#btnClear').style.display='';
+    const pw=$('#progWrap');if(pw)pw.remove();
+    toast('Training complete');
+  }catch(err){console.error(err);toast('Training failed — check console / internet',true);$('#trainBody').insertAdjacentHTML('beforeend',`<div class="muted" style="color:var(--danger);margin-top:10px">${err.message||err}</div>`);}
+  finally{S.busy=false;$('#btnTrain').disabled=false;}
+}
+function addOrReplace(res,sig){const ex=S.models.findIndex(m=>m.sig===sig);res.sig=sig;res.id='m'+(Date.now()%100000)+Math.floor(Math.random()*1000);if(ex>=0){disposeModel(S.models[ex]);if(S.selected===S.models[ex].id)S.selected=res.id;S.models[ex]=res;}else S.models.push(res);}
+
+function runKNN(trainE,trainY,valE,valY,C,k){const tn=trainE.map(l2norm);const preds=valE.map(v=>knnPredict(tn,trainY,l2norm(v),Math.min(k,trainE.length)).label);const m=metrics(valY,preds,C);return{...m,knn:{tn,trainY,k},curve:null,trainAcc:null};}
+async function runNN(hd,trainE,trainY,valE,valY,C,D,epochs,batch,lr){
+  const xs=tf.tensor2d(trainE),ys=tf.oneHot(tf.tensor1d(trainY,'int32'),C);
+  const vxs=valE.length?tf.tensor2d(valE):null,vys=valY.length?tf.oneHot(tf.tensor1d(valY,'int32'),C):null;
+  const net=tf.sequential();
+  if(hd==='mlp'){net.add(tf.layers.dense({inputShape:[D],units:128,activation:'relu'}));net.add(tf.layers.dropout({rate:0.3}));net.add(tf.layers.dense({units:C,activation:'softmax'}));}
+  else net.add(tf.layers.dense({inputShape:[D],units:C,activation:'softmax'}));
+  net.compile({optimizer:tf.train.adam(lr),loss:'categoricalCrossentropy',metrics:['accuracy']});
+  const curve={trainAcc:[],valAcc:[],valLoss:[]};
+  await net.fit(xs,ys,{epochs,batchSize:Math.min(batch,trainE.length),shuffle:true,validationData:vxs?[vxs,vys]:undefined,callbacks:{onEpochEnd:async(ep,logs)=>{curve.trainAcc.push(logs.acc??logs.accuracy??0);curve.valAcc.push(logs.val_acc??logs.val_accuracy??null);curve.valLoss.push(logs.val_loss??null);if(ep%2===0){setProgress((ep+1)/epochs);drawCurve(curve);await tf.nextFrame();}}}});
+  let preds=[];if(valE.length){const p=net.predict(vxs);preds=Array.from(p.argMax(1).dataSync());p.dispose();}
+  const m=metrics(valY,preds,C);xs.dispose();ys.dispose();if(vxs){vxs.dispose();vys.dispose();}
+  return{...m,net,curve,trainAcc:curve.trainAcc[curve.trainAcc.length-1]||0};
+}
+async function runCNN(spec,trainItems,valItems,trainY,valY,C,batch){
+  const xs=imageTensor(trainItems,spec.input),ys=tf.oneHot(tf.tensor1d(trainY,'int32'),C);
+  const vxs=valItems.length?imageTensor(valItems,spec.input):null,vys=valItems.length?tf.oneHot(tf.tensor1d(valY,'int32'),C):null;
+  const net=buildCNN(spec,C);
+  const opt=spec.opt==='sgd'?tf.train.sgd(spec.lr):spec.opt==='rmsprop'?tf.train.rmsprop(spec.lr):tf.train.adam(spec.lr);
+  net.compile({optimizer:opt,loss:'categoricalCrossentropy',metrics:['accuracy']});
+  const curve={trainAcc:[],valAcc:[],valLoss:[]};
+  await net.fit(xs,ys,{epochs:spec.epochs,batchSize:Math.min(batch,trainItems.length),shuffle:true,validationData:vxs?[vxs,vys]:undefined,callbacks:{onEpochEnd:async(ep,logs)=>{curve.trainAcc.push(logs.acc??logs.accuracy??0);curve.valAcc.push(logs.val_acc??logs.val_accuracy??null);curve.valLoss.push(logs.val_loss??null);setProgress((ep+1)/spec.epochs);if(ep%1===0){drawCurve(curve);await tf.nextFrame();}}}});
+  let preds=[];if(valItems.length){const p=net.predict(vxs);preds=Array.from(p.argMax(1).dataSync());p.dispose();}
+  const m=metrics(valY,preds,C);xs.dispose();ys.dispose();if(vxs){vxs.dispose();vys.dispose();}
+  return{...m,cnnModel:net,curve,trainAcc:curve.trainAcc[curve.trainAcc.length-1]||0};
+}
+
+/* ---------- leaderboard ---------- */
+let sortKey='macroF1';
+function renderLeaderboard(){
+  if(!S.models.length){$('#trainBody').innerHTML='<div class="placeholder muted">No models yet. Configure on the left and press <b>Train</b>.</div>';return;}
+  const rows=[...S.models].sort((a,b)=>(b[sortKey]||0)-(a[sortKey]||0));const best=rows[0];
+  $('#trainBody').innerHTML=`<table class="lead"><thead><tr><th>Model</th><th data-k="acc">Val acc</th><th data-k="macroF1">Macro-F1</th><th data-k="trainAcc">Train acc</th><th>Time</th><th></th></tr></thead><tbody>${rows.map(r=>{const sel=r.id===S.selected,bestr=r===best;return `<tr class="${sel?'sel':bestr?'best':''}" data-row="${r.id}"><td><span class="tagk ${r.kind==='cnn'?'cn':'tr'}">${r.kind==='cnn'?'CNN':'TL'}</span> <span class="bn">${r.name}</span>${bestr?' 🏆':''}</td><td><span class="metric-pill" style="background:${heat(r.acc)}">${pct(r.acc)}</span></td><td><span class="metric-pill" style="background:${heat(r.macroF1)}">${pct(r.macroF1)}</span></td><td>${r.trainAcc!=null?pct(r.trainAcc):'—'}</td><td>${(r.timeMs/1000).toFixed(1)}s</td><td><button class="pick ${sel?'active':''}" data-pick="${r.id}">${sel?'selected':'select'}</button></td></tr>`;}).join('')}</tbody></table>`;
+  document.querySelectorAll('[data-k]').forEach(th=>th.onclick=()=>{sortKey=th.dataset.k;renderLeaderboard();});
+  document.querySelectorAll('[data-row]').forEach(tr=>tr.onclick=e=>{if(e.target.dataset.pick)return;inspectModel(tr.dataset.row);});
+  document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=e=>{e.stopPropagation();selectModel(b.dataset.pick);});
+}
+const pct=v=>v==null?'—':(v*100).toFixed(1)+'%';
+const heat=v=>`hsl(${Math.round(120*v)} 70% 88%)`;
+function selectModel(id){S.selected=id;$('#btnTest').disabled=!S.testImgs.length;renderLeaderboard();inspectModel(id);toast('Model selected for inference');}
+function inspectModel(id){const r=S.models.find(m=>m.id===id);if(!r)return;$('#cardInspect').style.display='';$('#inspectName').innerHTML=`<b>${r.name}</b> — val accuracy ${pct(r.acc)}, macro-F1 ${pct(r.macroF1)}`;if(r.curve)drawCurve(r.curve);else{const cv=$('#curve'),c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.fillStyle='#9aa0a8';c.font='13px JetBrains Mono';c.fillText('KNN — no training curve',20,30);}renderCM(r.cm);renderPerClass(r.per);$('#cardInspect').scrollIntoView({behavior:'smooth',block:'nearest'});}
+function renderCM(cm){const C=S.classes.length,max=Math.max(1,...cm.flat());let h='<table class="cm"><tr><th>true⟍pred</th>'+S.classes.map(c=>`<th>${short(c)}</th>`).join('')+'</tr>';for(let i=0;i<C;i++){h+=`<tr><th>${short(S.classes[i])}</th>`+cm[i].map((v,j)=>{const a=v/max,bg=i===j?`rgba(10,157,107,${0.15+a*0.7})`:`rgba(224,49,49,${a*0.55})`;return `<td class="${i===j?'diag':''}" style="background:${v?bg:'transparent'}">${v}</td>`;}).join('')+'</tr>';}$('#cmWrap').innerHTML=h+'</table>';}
+const short=s=>s.length>8?s.slice(0,7)+'…':s;
+function renderPerClass(per){$('#pclsWrap').innerHTML=`<table class="pcls"><tr><th>class</th><th>prec</th><th>recall</th><th>F1</th><th>n</th></tr>`+per.map((p,i)=>`<tr><td>${S.classes[i]}</td><td>${pct(p.p)}</td><td>${pct(p.r)}</td><td>${pct(p.f)}</td><td>${p.support}</td></tr>`).join('')+'</table>';}
+function drawCurve(curve){const cv=$('#curve'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,pad=34;ctx.clearRect(0,0,W,H);ctx.strokeStyle='#ddd8ce';ctx.lineWidth=1;for(let g=0;g<=4;g++){const y=pad+(H-2*pad)*g/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-10,y);ctx.stroke();ctx.fillStyle='#9aa0a8';ctx.font='10px JetBrains Mono';ctx.fillText((100-g*25)+'%',2,y+3);}const n=curve.trainAcc.length;if(!n)return;const X=i=>pad+(W-pad-10)*(n>1?i/(n-1):0),Y=v=>pad+(H-2*pad)*(1-v);const line=(arr,col)=>{ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();let st=false;arr.forEach((v,i)=>{if(v==null)return;const x=X(i),y=Y(Math.max(0,Math.min(1,v)));if(!st){ctx.moveTo(x,y);st=true;}else ctx.lineTo(x,y);});ctx.stroke();};line(curve.trainAcc,'#1f7ae0');line(curve.valAcc,'#ff5630');if(curve.valLoss.some(v=>v!=null)){const mx=Math.max(...curve.valLoss.filter(v=>v!=null),1);line(curve.valLoss.map(v=>v==null?null:1-Math.min(1,v/mx)),'#9aa0a8');}}
+
+/* ---------- inference ---------- */
+$('#btnTest').onclick=runTest;
+function predictVec(r,canvas){
+  if(r.kind==='cnn'){const out=tf.tidy(()=>r.cnnModel.predict(tf.image.resizeBilinear(tf.browser.fromPixels(canvas),[r.inputSize,r.inputSize]).toFloat().div(255).expandDims(0)));return out;}
+  // transfer handled separately (needs backbone embed)
+  return null;
+}
+async function runTest(){
+  const r=S.models.find(m=>m.id===S.selected);if(!r){toast('Select a model first',true);return;}
+  if(!S.testImgs.length){toast('Load test images',true);return;}
+  S.busy=true;$('#btnTest').disabled=true;
+  $('#testBody').innerHTML=`<div class="proglabel">Preparing…</div><div class="progress"><div class="bar" id="tbar"></div></div>`;
+  try{
+    await ensureTF();
+    const backbone=r.kind==='transfer'?await getBackbone(r.backbone):null;
+    let items=[];const clsIdx=Object.fromEntries(S.classes.map((c,i)=>[c,i]));
+    if(S.testJson){const boxes=extractBoxes(S.testJson),byName={};S.testImgs.forEach(t=>byName[t.name]=t);for(const b of boxes){const t=byName[b.file_name];if(!t)continue;await loadImg(t);items.push({canvas:cropTo(t.imgEl,b.x,b.y,b.w,b.h),gt:b.label,name:b.file_name});}if(!items.length)toast('No test boxes matched — classifying whole images',false);}
+    if(!items.length){for(const t of S.testImgs){await loadImg(t);items.push({canvas:wholeTo(t.imgEl),gt:null,name:t.name});}}
+    const preds=[];
+    for(let i=0;i<items.length;i++){
+      let label,conf;
+      if(r.kind==='transfer'){
+        const e=tf.tidy(()=>backbone.infer(tf.browser.fromPixels(items[i].canvas),true));const vec=Float32Array.from(await e.data());e.dispose();
+        if(r.head==='knn'){const o=knnPredict(r.knn.tn,r.knn.trainY,l2norm(vec),Math.min(r.knn.k,r.knn.tn.length));label=o.label;conf=o.conf;}
+        else{const p=tf.tidy(()=>r.net.predict(tf.tensor2d([vec])));const arr=await p.data();p.dispose();label=argmax(arr);conf=arr[label];}
+      } else {
+        const p=predictVec(r,items[i].canvas);const arr=await p.data();p.dispose();label=argmax(arr);conf=arr[label];
+      }
+      preds.push({...items[i],pred:S.classes[label],conf});
+      if(i%3===0){const tb=$('#tbar');if(tb)tb.style.width=(i/items.length*100)+'%';await tf.nextFrame();}
+    }
+    renderTestResults(preds,clsIdx);toast(`Classified ${preds.length} item${preds.length>1?'s':''}`);
+  }catch(err){console.error(err);toast('Inference failed',true);}
+  finally{S.busy=false;$('#btnTest').disabled=false;}
+}
+const argmax=a=>{let b=0;for(let i=1;i<a.length;i++)if(a[i]>a[b])b=i;return b;};
+function renderTestResults(preds,clsIdx){
+  const hasGT=preds.some(p=>p.gt!=null);let html='';
+  if(hasGT){const yT=[],yP=[];preds.forEach(p=>{if(p.gt!=null&&clsIdx[p.gt]!=null){yT.push(clsIdx[p.gt]);yP.push(clsIdx[p.pred]);}});const m=metrics(yT,yP,S.classes.length);html+=`<div class="warnbox" style="background:#eafaf2;border-color:#b6e6cf;color:#0a6b48"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg><div><b>Test-set metrics</b> — accuracy ${pct(m.acc)}, macro-F1 ${pct(m.macroF1)} over ${yT.length} labelled crops.</div></div>`;}
+  html+='<div class="crops" style="max-height:none">';
+  preds.slice(0,200).forEach(p=>{const cls=p.gt==null?'':(p.gt===p.pred?'ok':'bad');html+=`<div class="crop ${cls}"><img src="${p.canvas.toDataURL()}"><div class="tag">${p.pred} · ${(p.conf*100).toFixed(0)}%${p.gt!=null?(p.gt===p.pred?' ✓':' ✗('+short(p.gt)+')'):''}</div></div>`;});
+  html+='</div>';if(preds.length>200)html+=`<div class="muted" style="margin-top:8px">showing first 200 of ${preds.length}</div>`;
+  html+=`<button class="btn ghost" id="btnExportPreds" style="max-width:240px;margin-top:14px">⤓ Export predictions (CSV)</button>`;
+  $('#testBody').innerHTML=html;
+  $('#btnExportPreds').onclick=()=>{const rows=[['file','predicted','confidence','ground_truth','correct']].concat(preds.map(p=>[p.name,p.pred,p.conf.toFixed(4),p.gt??'',p.gt!=null?(p.gt===p.pred):'']));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}));a.download='predictions.csv';a.click();};
+}
+
+/* ---------- progress / toast ---------- */
+function setProgress(f){const b=$('#pbar');if(b)b.style.width=(f*100)+'%';}
+function setLabel(t){const l=$('#plabel');if(l)l.textContent=t;}
+let toastTimer;function toast(msg,err){const t=$('#toast');$('#toastMsg').textContent=msg;t.classList.toggle('err',!!err);t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
